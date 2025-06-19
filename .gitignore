@@ -1,0 +1,35 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+env/
+venv/
+ENV/
+
+# Environment variables
+.env
+*.env
+
+# AWS CLI credentials/config
+.aws/
+
+# macOS system files
+.DS_Store
+
+# VS Code and other IDE configs
+.vscode/
+.idea/
+
+# Lambda deployment artifacts
+*.zip
+package/
+
+# Python package metadata
+*.egg-info/
+build/
+dist/
+
+# Logs
+*.log
