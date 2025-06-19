@@ -6,7 +6,7 @@ This AWS Lambda project sends weather alerts via **email (SES)** or **SMS (SNS)*
 
 ## 🚀 Features
 
-- ✅ Real-time temperature from [weather.gov](https://www.weather.gov)
+- ✅ Real-time temperature from [weather.gov](https://api.weather.gov/)
 - ✅ Email alerts via **Amazon SES**
 - ✅ SMS alerts via **Amazon SNS**
 - ✅ Configurable via environment variables
