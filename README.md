@@ -2,6 +2,10 @@
 
 This AWS Lambda project sends weather alerts via **email (SES)** or **SMS (SNS)** when temperatures in Ventura, CA exceed a configurable threshold. It uses real-time NOAA data and is fully automated with EventBridge Scheduler.
 
+![License](https://img.shields.io/github/license/gencavjj/ventura-weather-alert)
+![Last Commit](https://img.shields.io/github/last-commit/gencavjj/ventura-weather-alert)
+![Issues](https://img.shields.io/github/issues/gencavjj/ventura-weather-alert)
+
 ---
 
 ## 🚀 Features
