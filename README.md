@@ -1,163 +1,141 @@
 # 🌤️ Ventura Weather Alert (AWS Lambda)
 
-This project sends weather alerts via **email (Amazon SES)** or **SMS (Amazon SNS)** based on the latest temperature observations in Ventura, CA. The alerts are triggered when the temperature exceeds a configurable threshold, using data from the NOAA API and AWS Lambda automation.
+This AWS Lambda project sends weather alerts via **email (SES)** or **SMS (SNS)** when temperatures in Ventura, CA exceed a configurable threshold. It uses real-time NOAA data and is fully automated with EventBridge Scheduler.
 
+---
 
 ## 🚀 Features
 
+- ✅ Real-time temperature from [weather.gov](https://www.weather.gov)
+- ✅ Email alerts via **Amazon SES**
+- ✅ SMS alerts via **Amazon SNS**
+- ✅ Configurable via environment variables
+- ✅ Hourly automation with **EventBridge Scheduler**
 
-- ✅ Real-time temperature data via [weather.gov](https://api.weather.gov)
-- ✅ Email alerts using Amazon SES
-- ✅ SMS alerts using Amazon SNS
-- ✅ Threshold and recipient info via environment variables
-- ✅ Automated hourly checks using EventBridge Scheduler
-
+---
 
 ## 📁 Project Structure
 
+```
+ventura-weather-alert/
+├── src/
+│   ├── lambda_email_alert.py   # Email (SES)
+│   └── lambda_sms_alert.py     # SMS (SNS)
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
 
-weather-alert/
-- ├── lambda_email_alert.py # Lambda function to send email alerts (SES)
-- ├── lambda_sms_alert.py # Lambda function to send SMS alerts (SNS)
-- ├── README.md # This readme file
-- └── .gitignore # Ignores ZIPs and environment files
-
+---
 
 ## ⚙️ Prerequisites
 
-
 - AWS account with permissions for:
   - Lambda
-  - SES (with at least one verified email address)
-  - SNS (SMS sandbox or production)
+  - SES (with verified identities)
+  - SNS (sandbox or production)
   - EventBridge Scheduler
 - Python 3.12 or compatible
 
+---
 
-## 🔧 Setup Instructions (SOP)
+## 🔧 Setup Instructions
 
-
-### 1. Clone Repo & Install Dependencies
-
+### 1. Clone and Install
 ```bash
-git clone https://github.com/YOUR_USERNAME/weather-alert.git
-cd weather-alert
-pip install requests boto3 -t .
+git clone git@github.com:gencavjj/ventura-weather-alert.git
+cd ventura-weather-alert
+pip install -r requirements.txt -t package/
 ```
 
 ### 2. Package Lambda Code
-
 ```bash
-zip -r weather-alert.zip .
+cp src/*.py package/
+cd package
+zip -r ../weather-alert.zip .
 ```
 
-### 3. Create IAM Role for Lambda
-
-* Name: `LambdaWeatherAlertRole`
-* Trust policy: Lambda
-* Attach these AWS-managed policies:
-
-  * `AWSLambdaBasicExecutionRole`
-  * `AmazonSESFullAccess` *(for SES functions)*
-  * `AmazonSNSFullAccess` *(for SNS functions)*
-
+### 3. Create IAM Role
+- Name: `LambdaWeatherAlertRole`
+- Trust: Lambda
+- Policies:
+  - AWSLambdaBasicExecutionRole
+  - AmazonSESFullAccess (for email)
+  - AmazonSNSFullAccess (for SMS)
 
 ### 4. Deploy Lambda Functions
+Create two separate functions:
 
-Deploy each Lambda function separately:
+| Function       | Handler                        |
+|----------------|--------------------------------|
+| Email Alert    | `lambda_email_alert.lambda_handler` |
+| SMS Alert      | `lambda_sms_alert.lambda_handler`   |
 
-| Function          | Handler Name                        |
-| ----------------- | ----------------------------------- |
-| Email Alert (SES) | `lambda_email_alert.lambda_handler` |
-| SMS Alert (SNS)   | `lambda_sms_alert.lambda_handler`   |
+- Upload `weather-alert.zip`
+- Runtime: Python 3.12
+- Role: `LambdaWeatherAlertRole`
 
-* Upload `weather-alert.zip` for both functions
-* Runtime: Python 3.12
-* Assign the `LambdaWeatherAlertRole`
+### 5. Set Environment Variables
+In the Lambda console:
 
-
-### 5. Configure Environment Variables
-
-Go to **Lambda > Configuration > Environment Variables** and set the following:
-
-| Key                | Example Value                                                        |
-| ------------------ | -------------------------------------------------------------------- |
-| `EMAIL_SENDER`     | [alerts@yourdomain.com](mailto:alerts@yourdomain.com)                |
-| `EMAIL_RECIPIENT`  | [you@example.com](mailto:you@example.com)                            |
-| `PHONE_NUMBER`     | +14435551234 (SNS only)                                              |
-| `TEMP_THRESHOLD_F` | 50                                                                   |
-| `AWS_REGION`       | us-west-1                                                            |
-| `USER_AGENT`       | [yourname@yourdomain.com](mailto:yourname@yourdomain.com) (App Name) |
-
-These ensure the code stays clean and secure.
+| Key              | Example Value              |
+|------------------|----------------------------|
+| EMAIL_SENDER     | alerts@yourdomain.com      |
+| EMAIL_RECIPIENT  | you@example.com            |
+| PHONE_NUMBER     | +14435551234 (for SMS)     |
+| TEMP_THRESHOLD_F | 50                         |
+| AWS_REGION       | us-west-1                  |
+| USER_AGENT       | yourname@yourdomain.com    |
 
 ---
 
-## 📨 SES Setup (Email)
-
-1. Open **Amazon SES > Verified Identities**
-2. Verify your sender and recipient emails
-3. If needed, request production SES access via AWS Support
-4. Add the `EMAIL_SENDER` and `EMAIL_RECIPIENT` vars in Lambda
+## 📨 Amazon SES Setup
+- Verify sender & recipient emails in **SES**
+- (Optional) Request production access from AWS Support
+- Use verified emails in environment variables
 
 ---
 
-## 📲 SNS Setup (SMS)
-
-1. Open **Amazon SNS > SMS and Sandbox**
-2. Add your phone number to test SMS alerts
-3. Request **production access** and **monthly spend limit** increase to exit sandbox
-4. Set `PHONE_NUMBER` env var
+## 📲 Amazon SNS Setup
+- Add phone numbers to SNS sandbox
+- To go live, request production SMS access + spending limit increase
+- Set `PHONE_NUMBER` env variable
 
 ---
 
-## 📅 Create Scheduled Trigger
+## 📅 Create Scheduler
+In **Amazon EventBridge Scheduler**:
 
-Use Amazon EventBridge Scheduler:
-
-1. Go to **EventBridge > Scheduler**
-2. Create schedule:
-
-   * Name: `ventura-weather-schedule`
-   * Expression: `rate(1 hour)`
-   * Target: Your Lambda function (SES or SNS)
-3. Permissions: Allow EventBridge to invoke the function
+- Name: `ventura-weather-schedule`
+- Expression: `rate(1 hour)`
+- Target: Lambda function (SES or SNS)
+- Allow EventBridge to invoke function
 
 ---
 
-## 🧪 Test the Function
+## 🧪 Testing
+Use the Lambda console:
 
-In the AWS Lambda console:
-
-* Use the test event (any JSON payload, or `{}`)
-* Check CloudWatch Logs for:
-
-  * Retrieved temperature
-  * Email or SMS delivery confirmation
+- Create test event (empty JSON `{}` is fine)
+- Monitor results via **CloudWatch Logs**
 
 ---
 
 ## 🧹 Best Practices
 
-* ❌ Never hardcode secrets or credentials in code
-* ✅ Use environment variables for all configs
-* 🔐 Rotate IAM credentials regularly
-* 📉 Monitor SES/SNS quotas and errors in CloudWatch
+- ❌ Never hardcode secrets
+- ✅ Use environment variables for config
+- 🔐 Rotate IAM credentials regularly
+- 📉 Monitor SES/SNS quotas in CloudWatch
 
 ---
 
 ## 📄 License
-
 MIT License
 
 ---
 
 ## 👤 Author
-
-**Jeremy Gencavage**
-[kingtidesolutions.com](https://www.kingtidesolutions.com)
-
----
-
-GitHub: [@gencavjj](https://github.com/)
-
+**Jeremy Gencavage**  
+[kingtidesolutions.com](https://kingtidesolutions.com)  
+GitHub: [@gencavjj](https://github.com/gencavjj)
